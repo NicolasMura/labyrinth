@@ -10,6 +10,8 @@ Date    : 08/09/2016
 Version : 2.0
 """
 
+import os
+import pickle
 import copy
 from robot import Robot
 from obstacles import Obstacle, Mur, Porte, Sortie
@@ -20,19 +22,20 @@ class Carte:
     Objet de transition entre un fichier et un labyrinthe.
     """
 
-    def __init__(self, number, name, string, string_initiale):
+    def __init__(self, number, filename, name_to_print, string, string_initiale):
         """
         Si on reprend une partie sauvegardée, la carte et son labyrinthe
         associé sont créés avec :
-        - string issue du fichier <carte>_save
-        - string_initiale issue du fichier <carte>.txt (fichier original)
+        - string issue du fichier <carte_filename>_save
+        - string_initiale issue du fichier <carte_filename>.txt (fichier original)
 
         Si on reprend une partie du début, les chaînes string et
         string_initiale données en argument sont identiques.
         """
 
         self.number = number
-        self.name = name
+        self.filename = filename
+        self.name_to_print = name_to_print
         self.string = string
         self.string_initiale = string_initiale
         self.char_matrice = []
@@ -42,7 +45,7 @@ class Carte:
         self.labyrinth = self.create_labyrinth_from_string(string, string_initiale)
 
     def __repr__(self):
-        return "<Carte {} - {}>".format(self.number, self.name)
+        return "<Carte {} - {}>".format(self.number, self.name_to_print)
 
     def create_labyrinth_from_string(self, string, string_initiale):
         """
@@ -159,6 +162,23 @@ class Carte:
             if nb_lignes < len(self.char_matrice)-1:
                 self.string += "\n"
             nb_lignes += 1
+
+    def save(self):
+        """
+        Fonction permettant d'enregistrer la partie en cours.
+        """
+        if not os.path.isdir("cartes/sauvegardes/"):
+            os.makedirs("cartes/sauvegardes/")
+        with open("cartes/sauvegardes/" + self.filename, "wb") as data:
+                mypickler = pickle.Pickler(data)
+                mypickler.dump(self.string)
+
+    def destroy(self):
+        """
+        Fonction permettant d'effacer la partie en cours.
+        """
+        if os.path.isfile("cartes/sauvegardes/" + self.filename):
+            os.remove("cartes/sauvegardes/" + self.filename)
 
 
 class Labyrinthe:

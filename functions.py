@@ -24,8 +24,8 @@ def get_maps():
     maps = {
         {
             "number": '0',
-            "filename": 'cartes/Facile.txt',
-            "name_to_print": 'facile',
+            "filename": 'cartes/facile.txt',
+            "name_to_print": 'Facile',
             "en_cours": False,
         },
         {
@@ -34,23 +34,23 @@ def get_maps():
     }
     """
 
-    maps_names_list2 = []
+    maps_names_list = []
     maps = {}
     en_cours = False
     if os.path.isdir("cartes"):
         for filename in os.listdir("cartes"):
             if filename.endswith(".txt"):
-                maps_names_list2.append(filename)
+                maps_names_list.append(filename)
 
-        if len(maps_names_list2) > 0:
+        if len(maps_names_list) > 0:
             print("Labyrinthes existants :")
             i = 0
-            for key, filename in enumerate(maps_names_list2):
+            for key, filename in enumerate(maps_names_list):
                 # Nettoyage des noms des fichiers
                 name_to_print = filename.replace(".txt", "").lower().capitalize()
                 # Si on détecte qu'une partie est en cours (ie qu'un fichier
                 # <carte>_save existe), on le spécifie
-                if os.path.isfile("cartes/sauvegardes/" + filename + "_save"):
+                if os.path.isfile("cartes/sauvegardes/" + filename):
                     en_cours = True
                     name_to_print += " (en cours)"
                 maps[key] = {
@@ -135,7 +135,7 @@ def get_string_map(map_selected, reprendre_partie):
         print("OK, reprise de la partie sauvegardée !")
         with open("cartes/" + map_selected["filename"], "r") as fichier:
             string_map_initiale = fichier.read()
-        with open("cartes/sauvegardes/" + map_selected["filename"] + "_save", "rb") as fichier:
+        with open("cartes/sauvegardes/" + map_selected["filename"], "rb") as fichier:
             mon_depickler = pickle.Unpickler(fichier)
             string_map_saved = mon_depickler.load()
     else:

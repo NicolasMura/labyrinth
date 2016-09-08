@@ -41,7 +41,7 @@ if map_selected["en_cours"] is True:
         elif user_input in ["N", "n"]:
             reprendre_partie = False
             # On efface la partie sauvegardée
-            os.remove("cartes/sauvegardes/" + map_selected["filename"] + "_save")
+            os.remove("cartes/sauvegardes/" + map_selected["filename"])
 
 # Récupération de la carte sélectionnée
 # sous forme de chaîne de caractères
@@ -51,6 +51,7 @@ if map_selected["en_cours"] is True:
 # Création d'un objet carte avec la chaîne de caractères récupérée string_map
 carte = Carte(
     map_selected["number"],
+    map_selected["filename"],
     map_selected["name_to_print"],
     string_map, string_map_initiale)
 
@@ -76,9 +77,7 @@ while(continue_partie):
     if user_input in ["Q", "q"]:
         continue_partie = False
         if nb_deplacements > 0:
-            with open("cartes/sauvegardes/" + map_selected["filename"] + "_save", "wb") as data:
-                mypickler = pickle.Pickler(data)
-                mypickler.dump(carte.string)
+            carte.save()
             print("La partie en cours a été sauvegardée. A bientôt...\n")
         else:
             print("A bientôt... (PS : comme vous n'avez pas déplacé le robot, la partie reste en l'état)\n")
@@ -101,5 +100,4 @@ while(continue_partie):
                     print("Félicitations ! Vous avez gagné !\n")
                     continue_partie = False
                     # On efface une éventuelle partie sauvegardée
-                    if os.path.isfile("cartes/sauvegardes/" + map_selected["filename"] + "_save"):
-                        os.remove("cartes/sauvegardes/" + map_selected["filename"] + "_save")
+                    carte.destroy()
