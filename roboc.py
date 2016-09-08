@@ -5,18 +5,26 @@ Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 3
 Mainfile - Exécutez-le avec Python 3 pour lancer le jeu.
 
 Auteur  : Nicolas MURA
-Date    : 02/09/2016
-Version : 1.0
+Date    : 08/09/2016
+Version : 2.0
 """
-from os import path, remove
+
+import os
 from functions import *
 import pickle
 from classes import *
+
+if os.name == "nt":
+    os.system('cls')
+else:
+    os.system("clear")
 
 print("\nBienvenu(e) dans le jeu du labyrinthe !\n")
 # Récupération et affichage du nom des cartes existantes,
 # ou affichage d'un message approprié si aucune carte trouvée
 maps = get_maps()
+if maps is None:
+    raise TypeError("Erreur : votre projet doit contenir un dossier 'cartes' avec au moins une carte valide.")
 
 # Sélection et récupération d'une carte par l'utilisateur
 map_selected = chose_map(maps)
@@ -33,7 +41,7 @@ if map_selected["en_cours"] is True:
         elif user_input in ["N", "n"]:
             reprendre_partie = False
             # On efface la partie sauvegardée
-            remove("cartes/" + map_selected["filename"] + "_save")
+            os.remove("cartes/sauvegardes/" + map_selected["filename"] + "_save")
 
 # Récupération de la carte sélectionnée
 # sous forme de chaîne de caractères
@@ -43,7 +51,7 @@ if map_selected["en_cours"] is True:
 # Création d'un objet carte avec la chaîne de caractères récupérée string_map
 carte = Carte(
     map_selected["number"],
-    map_selected["name"],
+    map_selected["name_to_print"],
     string_map, string_map_initiale)
 
 # Récupération du labyrinthe et du robot
@@ -51,14 +59,7 @@ labyrinth = carte.labyrinth
 robot = carte.labyrinth.robot
 
 # On lance le jeu avec un petit rappel des règles
-print("""\nRappel des règles du jeu :
-- Entrer N pour aller en haut
-- Entrer E pour aller à droite
-- Entrer S pour aller en bas
-- Entrer O pour aller à gauche
-- Chacune des directions ci-dessus suivies d'un nombre permet d'avancer de
-  plusieurs cases (par exemple E3 pour avancer de trois cases vers la droite)
-- Entrer q ou Q pour quitter la partie\n""")
+labyrinth.get_help()
 
 continue_partie = True
 
@@ -72,13 +73,17 @@ while(continue_partie):
     # Si l'utilisateur quitte le jeu, on enregistre la chaîne
     # représentant l'état de la carte dans sa dernière version
     # (à condition qu'il y ait eu au moins 1 déplacement)
-    if user_input == "q" or user_input == "Q":
+    if user_input in ["Q", "q"]:
         continue_partie = False
         if nb_deplacements > 0:
-            with open("cartes/" + map_selected["filename"] + "_save", "wb") as data:
+            with open("cartes/sauvegardes/" + map_selected["filename"] + "_save", "wb") as data:
                 mypickler = pickle.Pickler(data)
                 mypickler.dump(carte.string)
             print("La partie en cours a été sauvegardée. A bientôt...\n")
+        else:
+            print("A bientôt... (PS : comme vous n'avez pas déplacé le robot, la partie reste en l'état)\n")
+    elif user_input == "help":
+        labyrinth.get_help()
     else:
         deplacement = check_user_input(user_input)
         # Si la saisie utilisateur est correcte, on essaie de déplacer le robot
@@ -96,5 +101,5 @@ while(continue_partie):
                     print("Félicitations ! Vous avez gagné !\n")
                     continue_partie = False
                     # On efface une éventuelle partie sauvegardée
-                    if path.isfile("cartes/" + map_selected["filename"] + "_save"):
-                        remove("cartes/" + map_selected["filename"] + "_save")
+                    if os.path.isfile("cartes/sauvegardes/" + map_selected["filename"] + "_save"):
+                        os.remove("cartes/sauvegardes/" + map_selected["filename"] + "_save")

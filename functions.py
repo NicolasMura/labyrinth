@@ -8,17 +8,18 @@ Auteur  : Nicolas MURA
 Date    : 02/09/2016
 Version : 1.0
 """
-from os import path
+import os
 import glob
 import pickle
 import copy
+import re
 
 
 def get_maps():
     """
     Fonction qui permet de récupérer l'ensemble des informations
     des cartes situées dans un répertoire 'cartes', sous la forme
-    d'un dictionnaire de dictionnaires maps, par ex. :
+    d'un dictionnaire de dictionnaires, par ex. :
 
     maps = {
         {
@@ -33,27 +34,29 @@ def get_maps():
     }
     """
 
+    maps_names_list2 = []
     maps = {}
     en_cours = False
-    if path.isdir("cartes"):
-        maps_names_list = glob.glob("cartes/*.txt")
-        if len(maps_names_list) > 0:
+    if os.path.isdir("cartes"):
+        for filename in os.listdir("cartes"):
+            if filename.endswith(".txt"):
+                maps_names_list2.append(filename)
+
+        if len(maps_names_list2) > 0:
             print("Labyrinthes existants :")
             i = 0
-            for key, filename in enumerate(maps_names_list):
+            for key, filename in enumerate(maps_names_list2):
                 # Nettoyage des noms des fichiers
-                filename = filename.replace("cartes/", "").replace(".txt", "")
-                filename = filename.lower()
-                name_to_print = filename.lower()
+                name_to_print = filename.replace(".txt", "").lower().capitalize()
                 # Si on détecte qu'une partie est en cours (ie qu'un fichier
                 # <carte>_save existe), on le spécifie
-                if path.isfile("cartes/" + filename + "_save"):
+                if os.path.isfile("cartes/sauvegardes/" + filename + "_save"):
                     en_cours = True
                     name_to_print += " (en cours)"
                 maps[key] = {
                     "number": key,
                     "filename": filename,
-                    "name": name_to_print,
+                    "name_to_print": name_to_print,
                     "en_cours": en_cours
                 }
                 print("{0} - {1}".format(key+1, name_to_print))
@@ -65,8 +68,9 @@ def get_maps():
                 "\nAucune carte trouvée : veuillez ajouter une carte au " \
                 "format .txt dans votre dossier 'cartes'.\n"
                 )
+
     else:
-        print("\nVotre projet doit contenir un dossier 'cartes'.\n")
+        print("\nErreur : votre projet doit contenir un dossier 'cartes'.\n")
 
 
 def chose_map(maps):
@@ -104,11 +108,11 @@ def chose_map(maps):
 
     map_selected["number"] = number_selected
     map_selected["filename"] = maps[number_selected-1]["filename"]
-    map_selected["name"] = maps[number_selected-1]["name"]
+    map_selected["name_to_print"] = maps[number_selected-1]["name_to_print"]
     map_selected["en_cours"] = maps[number_selected-1]["en_cours"]
 
-    print("Vous avez sélectionné la carte : {} - {}\n".format(
-        map_selected["number"], map_selected["name"]))
+    print("Vous avez sélectionné la carte : {} - {}".format(
+        map_selected["number"], map_selected["name_to_print"]))
     return map_selected
 
 
@@ -119,27 +123,28 @@ def get_string_map(map_selected, reprendre_partie):
     A la demande de l'utilisateur, on récupère :
 
     - Soit une partie sauvegardée :
-      -> string_map          = contenu du fichier <carte>_save
-      -> string_map_initiale = contenu du fichier <carte>.txt
+      -> string_map_initiale = contenu du fichier <carte_filename>.txt
+      -> string_map_saved    = contenu du fichier sauvegardes/<carte_filename>_save
+
     - Soit une partie à jouer depuis le début
-      -> string_map          = contenu du fichier <carte>.txt
-      -> string_map_initiale = copie de la chaine string_maps
+      -> string_map_initiale = contenu du fichier <carte_filename>.txt
+      -> string_map_saved    = copie de la chaine string_map_initiale
     """
 
     if reprendre_partie is True:
-        print("Reprise de la partie précédente")
-        print(map_selected["filename"])
-        with open("cartes/" + map_selected["filename"] + "_save", "rb") as fichier:
-            mon_depickler = pickle.Unpickler(fichier)
-            string_map = mon_depickler.load()
-        with open("cartes/" + map_selected["filename"] + ".txt", "r") as fichier:
+        print("OK, reprise de la partie sauvegardée !")
+        with open("cartes/" + map_selected["filename"], "r") as fichier:
             string_map_initiale = fichier.read()
+        with open("cartes/sauvegardes/" + map_selected["filename"] + "_save", "rb") as fichier:
+            mon_depickler = pickle.Unpickler(fichier)
+            string_map_saved = mon_depickler.load()
     else:
-        with open("cartes/" + map_selected["filename"] + ".txt", "r") as fichier:
-            string_map = fichier.read()
-            string_map_initiale = copy.deepcopy(string_map)
+        print("OK, reprise de la partie depuis le début !")
+        with open("cartes/" + map_selected["filename"], "r") as fichier:
+            string_map_initiale = fichier.read()
+        string_map_saved = copy.deepcopy(string_map_initiale)
 
-    return string_map, string_map_initiale
+    return string_map_saved, string_map_initiale
 
 
 def check_user_input(input_user):

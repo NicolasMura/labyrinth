@@ -2,13 +2,17 @@
 
 """
 Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 3
-Ce module contient les classes utilisées dans le jeu du labyrinthe.
+Ce module contient les classes Carte et Labyrinthe utilisées
+dans le jeu du labyrinthe.
 
 Auteur  : Nicolas MURA
-Date    : 02/09/2016
-Version : 1.0
+Date    : 08/09/2016
+Version : 2.0
 """
+
 import copy
+from robot import Robot
+from obstacles import Obstacle, Mur, Porte, Sortie
 
 
 class Carte:
@@ -244,46 +248,13 @@ class Labyrinthe:
             i += 1
         return [robot_move, fin_partie]
 
-
-class Robot:
-    """
-    Classe représentant notre robot.
-    """
-
-    def __init__(self, pos_x, pos_y):
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        self.last_pos_x = pos_x
-        self.last_pos_y = pos_y
-
-    def move(self, sens):
-        """
-        Fonction permettant de mettre à jour les nouvelles coordonnées
-        du robot après un déplacement.
-        """
-
-        # On enregistre la nouvelle position
-        if sens in ["N", "n"]:
-            self.pos_y -= 1
-        if sens in ["E", "e"]:
-            self.pos_x += 1
-        if sens in ["S", "s"]:
-            self.pos_y += 1
-        if sens in ["O", "o"]:
-            self.pos_x -= 1
-        return [self.pos_x, self.pos_y]
-
-
-class Obstacle:
-    """
-    Classe représentant un obstacle.
-    """
-
-    def __init__(self, pos_x, pos_y, nature):
-        self.pos_x = pos_x
-        self.pos_y = pos_y
-        self.position = (pos_x, pos_y)
-        self.nature = nature
-
-    def __repr__(self):
-        return "Obstacle {} @ {}".format(self.nature, self.position)
+    def get_help(self):
+        print("\nRappel des règles du jeu :")
+        print("  - Entrez N pour aller en haut")
+        print("  - Entrez E pour aller à droite")
+        print("  - Entrez S pour aller en bas")
+        print("  - Entrez O pour aller à gauche")
+        print("  - Chacune des directions ci-dessus suivies d'un nombre permet d'avancer de \n" \
+            "    plusieurs cases (par exemple E3 pour avancer de trois cases vers la droite)")
+        print("  - Entrez Q pour quitter la partie")
+        print("  - Entrez help pour obtenir de l'aide.\n")
