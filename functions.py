@@ -135,14 +135,12 @@ def get_string_map(map_selected, reprendre_partie):
     """
 
     if reprendre_partie is True:
-        print("OK, reprise de la partie sauvegardée !")
         with open("cartes/" + map_selected["filename"], "r") as fichier:
             string_map_initiale = fichier.read()
         with open("cartes/sauvegardes/" + map_selected["filename"], "rb") as fichier:
             mon_depickler = pickle.Unpickler(fichier)
             string_map_saved = mon_depickler.load()
     else:
-        print("OK, reprise de la partie depuis le début !")
         with open("cartes/" + map_selected["filename"], "r") as fichier:
             string_map_initiale = fichier.read()
         string_map_saved = string_map_initiale

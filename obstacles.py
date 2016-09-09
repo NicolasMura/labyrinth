@@ -2,7 +2,7 @@
 
 """
 Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 3
-Ce module contient la classe Obstacle générique et les classes
+Ce module contient la classe Obstacle générique et ses classes
 dérivées Mur, Porte et Sortie utilisées dans le jeu du labyrinthe.
 
 Auteur  : Nicolas MURA

@@ -39,8 +39,10 @@ if map_selected["en_cours"] is True:
     while(user_input not in ["Y", "y", "N", "n"]):
         user_input = input("Une partie est en cours sur ce labyrinthe : souhaitez-vous la reprendre ? (Y/n) ")
         if user_input in ["Y", "y"]:
+            print("OK, reprise de la partie sauvegardée !")
             reprendre_partie = True
         elif user_input in ["N", "n"]:
+            print("OK, reprise de la partie depuis le début !")
             reprendre_partie = False
             # On efface la partie sauvegardée
             os.remove("cartes/sauvegardes/" + map_selected["filename"])
