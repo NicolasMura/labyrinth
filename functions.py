@@ -8,11 +8,9 @@ Auteur  : Nicolas MURA
 Date    : 02/09/2016
 Version : 1.0
 """
+
 import os
-import glob
 import pickle
-import copy
-import re
 
 
 def get_maps():
@@ -48,11 +46,11 @@ def get_maps():
             for key, filename in enumerate(maps_names_list):
                 # Nettoyage des noms des fichiers
                 name_to_print = filename.replace(".txt", "").lower().capitalize()
-                # Si on détecte qu'une partie est en cours (ie qu'un fichier
-                # <carte>_save existe), on le spécifie
+                # Si on détecte qu'une partie est en cours
+                # on l'enregistre
                 if os.path.isfile("cartes/sauvegardes/" + filename):
                     en_cours = True
-                    name_to_print += " (en cours)"
+                    name_to_print += " (partie en cours)"
                 maps[key] = {
                     "number": key,
                     "filename": filename,
@@ -82,16 +80,21 @@ def chose_map(maps):
     map_selected = {
         "number": 1,
         "filename": 'facile',
-        "name": 'facile',
+        "name_to_print": 'Facile (partie en cours)',
         "en_cours": True
     }
     """
 
     map_selected = {}
-    number_selected = input(
-        "\nEntrez un numéro de labyrinthe pour commencer à jouer : ")
+    user_input = input(
+        "\nEntrez un numéro de labyrinthe pour commencer à jouer (ou Q pour quitter) : ")
+
+    if user_input in ["Q", "q"]:
+        print("Vous nous quittez déjà ? A bientôt...\n")
+        exit()
+
     try:
-        number_selected = int(number_selected)
+        user_input = int(user_input)
     except ValueError:
         print("Erreur : vous devez entrer un entier !\n")
         # On réaffiche les maps et on demande à nouveau
@@ -99,17 +102,17 @@ def chose_map(maps):
         maps = get_maps()
         return chose_map(maps)
 
-    if number_selected > len(maps) or number_selected <= 0:
+    if user_input > len(maps) or user_input <= 0:
         print("Saisie incorrecte : veuillez choisir une carte existante.\n")
         # On réaffiche les maps et on demande à nouveau
         # à l'utilisateur d'entrer un numéro de labyrinthe
         maps = get_maps()
         return chose_map(maps)
 
-    map_selected["number"] = number_selected
-    map_selected["filename"] = maps[number_selected-1]["filename"]
-    map_selected["name_to_print"] = maps[number_selected-1]["name_to_print"]
-    map_selected["en_cours"] = maps[number_selected-1]["en_cours"]
+    map_selected["number"] = user_input
+    map_selected["filename"] = maps[user_input-1]["filename"]
+    map_selected["name_to_print"] = maps[user_input-1]["name_to_print"]
+    map_selected["en_cours"] = maps[user_input-1]["en_cours"]
 
     print("Vous avez sélectionné la carte : {} - {}".format(
         map_selected["number"], map_selected["name_to_print"]))
@@ -123,12 +126,12 @@ def get_string_map(map_selected, reprendre_partie):
     A la demande de l'utilisateur, on récupère :
 
     - Soit une partie sauvegardée :
-      -> string_map_initiale = contenu du fichier <carte_filename>.txt
-      -> string_map_saved    = contenu du fichier sauvegardes/<carte_filename>_save
+      -> string_map_initiale = contenu du fichier cartes/<carte_filename>.txt
+      -> string_map_saved    = contenu du fichier cartes/sauvegardes/<carte_filename>_save
 
     - Soit une partie à jouer depuis le début
-      -> string_map_initiale = contenu du fichier <carte_filename>.txt
-      -> string_map_saved    = copie de la chaine string_map_initiale
+      -> string_map_initiale = contenu du fichier cartes/<carte_filename>.txt
+      -> string_map_saved    = string_map_initiale
     """
 
     if reprendre_partie is True:
@@ -142,7 +145,7 @@ def get_string_map(map_selected, reprendre_partie):
         print("OK, reprise de la partie depuis le début !")
         with open("cartes/" + map_selected["filename"], "r") as fichier:
             string_map_initiale = fichier.read()
-        string_map_saved = copy.deepcopy(string_map_initiale)
+        string_map_saved = string_map_initiale
 
     return string_map_saved, string_map_initiale
 
@@ -166,12 +169,14 @@ def check_user_input(input_user):
     nb_cases = 0
 
     if len(input_user) == 0:
-        print("Erreur : merci d'entrer une direction :)\n")
+        print("Erreur : merci d'entrer une direction :)\n" \
+            "(Tapez help pour afficher l'aide)\n")
 
     else:
         sens = input_user[0]
         if sens not in ["N", "E", "S", "O", "n", "e", "s", "o"]:
-            print("Saisie de la direction incorrecte (N, E, S ou O obligatoire).\n")
+            print("Saisie de la direction incorrecte (N, E, S ou O obligatoire).\n" \
+                "(Tapez help pour afficher l'aide)\n")
         else:
             # S'il n'y aucun caractère derrière la direction, le joueur
             # souhaite se déplacer d'une seule case
@@ -185,14 +190,16 @@ def check_user_input(input_user):
                     nb_cases = int(nb_cases)
                 except ValueError:
                     print("Erreur : vous devez entrer un nombre " \
-                        "entier derrière votre direction !\n")
+                        "entier derrière votre direction !\n" \
+                        "(Tapez help pour afficher l'aide)\n")
 
             if type(nb_cases) is int:
                 # On vérifie que l'utilisateur n'a pas entré un nombre
                 # inférieur ou égal à 0
                 if nb_cases <= 0:
                     print("Erreur : vous devez entrer un nombre entier " \
-                        "strictement positif derrière votre direction !\n")
+                        "strictement positif derrière votre direction !\n" \
+                        "(Tapez help pour afficher l'aide)\n")
                 else:
                     check = True
 

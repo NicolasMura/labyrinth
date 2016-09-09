@@ -2,7 +2,9 @@
 
 """
 Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 3
-Mainfile - Exécutez-le avec Python 3 pour lancer le jeu.
+Mainfile - Pour lancer le jeu, exécutez :
+> python3 roboc.py sous OS X
+> py -3 roboc.py sous Windows
 
 Auteur  : Nicolas MURA
 Date    : 08/09/2016
@@ -11,10 +13,10 @@ Version : 2.0
 
 import os
 from functions import *
-import pickle
 from classes import *
 
-if os.name == "nt":
+
+if os.name == "nt":  # Cas Windows
     os.system('cls')
 else:
     os.system("clear")
@@ -43,17 +45,17 @@ if map_selected["en_cours"] is True:
             # On efface la partie sauvegardée
             os.remove("cartes/sauvegardes/" + map_selected["filename"])
 
-# Récupération de la carte sélectionnée
+# Récupération de la carte sélectionnée et d'une éventuelle sauvegarde
 # sous forme de chaîne de caractères
-(string_map, string_map_initiale) = get_string_map(
+(string_map_saved, string_map_initiale) = get_string_map(
     map_selected, reprendre_partie)
 
-# Création d'un objet carte avec la chaîne de caractères récupérée string_map
+# Création d'un objet carte
 carte = Carte(
     map_selected["number"],
     map_selected["filename"],
     map_selected["name_to_print"],
-    string_map, string_map_initiale)
+    string_map_saved, string_map_initiale)
 
 # Récupération du labyrinthe et du robot
 labyrinth = carte.labyrinth
@@ -87,17 +89,17 @@ while(continue_partie):
         deplacement = check_user_input(user_input)
         # Si la saisie utilisateur est correcte, on essaie de déplacer le robot
         if deplacement["check"] is True:
-            [robot_move, fin_partie] = labyrinth.robot_move(
+            fin_partie = labyrinth.robot_move(
                 robot,
                 deplacement["sens"],
                 deplacement["nb_cases"]
             )
-            if robot_move is True:
-                carte.update_carte_string(robot)
-                nb_deplacements += 1
-                if fin_partie is True:
-                    print(carte.string, "\n")
-                    print("Félicitations ! Vous avez gagné !\n")
-                    continue_partie = False
-                    # On efface une éventuelle partie sauvegardée
-                    carte.destroy()
+            # if robot_move is True:
+            carte.update_carte_string(robot)
+            nb_deplacements += 1
+            if fin_partie is True:
+                print(carte.string, "\n")
+                print("Félicitations ! Vous avez gagné !\n")
+                continue_partie = False
+                # On efface une éventuelle partie sauvegardée
+                carte.destroy()

@@ -15,6 +15,8 @@ class Robot:
     Classe représentant notre robot.
     """
 
+    symbole = "X"
+
     def __init__(self, pos_x, pos_y):
         self.pos_x = pos_x
         self.pos_y = pos_y

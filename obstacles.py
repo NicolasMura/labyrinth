@@ -13,54 +13,38 @@ Version : 1.0
 
 class Obstacle:
     """
-    Classe représentant un obstacle.
+    Classe représentant un obstacle générique.
     """
 
-    def __init__(self, pos_x, pos_y, nature):
+    def __init__(self, pos_x, pos_y, name):
         self.pos_x = pos_x
         self.pos_y = pos_y
         self.position = (pos_x, pos_y)
-        self.nature = nature
+        self.name = name
 
     def __repr__(self):
-        return "Obstacle {} @ {}".format(self.nature, self.position)
+        return "Obstacle {} @ {}".format(self.name, self.position)
 
 
 class Mur(Obstacle):
+    """Classe représentant un mur, un obstacle non franchissable."""
 
-    """Classe représentant un mur, un obstacle impassable."""
-
-    est_franchissable = False
-    nom = "mur"
+    can_be_crossed = False
+    name = "mur"
     symbole = "O"
 
 
 class Porte(Obstacle):
+    """Classe représentant une porte, un obstacle franchissable."""
 
-    """Classe représentant une porte, un obstacle passable."""
-
-    est_franchissable = True
-    nom = "porte"
+    can_be_crossed = True
+    name = "porte"
     symbole = "."
 
 
 class Sortie(Obstacle):
+    """Classe représentant une sortie du labyrinthe."""
 
-    """Classe représentant une sortie du labyrinthe.
-
-    Quand le robot arrive sur cette case, la partie est considérée comme
-    terminée.
-
-    """
-
-    est_franchissable = True
-    nom = "sortie"
+    can_be_crossed = True
+    name = "sortie"
     symbole = "U"
-
-    def arriver(self, labyrinthe, robot):
-        """Le robot arrive sur la sortie.
-
-        La partie est gagnée !
-
-        """
-        labyrinthe.gagnee = True
