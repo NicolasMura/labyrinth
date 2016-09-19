@@ -133,35 +133,68 @@ def get_string_map(map_selected):
 
 def check_user_input(input_user):
     """
-    Fonction qui vérifie le déplacement demandé par l'utilisateur.
-    On regarde d'abord la première lettre (qui désigne la direction), puis
-    si celle-ci est reconnue on regarde si celle-ci est suivie d'un nombre.
+    Fonction qui vérifie la commande entrée par l'utilisateur.
+    On regarde d'abord la première lettre (qui désigne la commande), puis
+    si celle-ci est reconnue on regarde si celle-ci est suivie d'un nombre
+    ou d'une lettre.
 
     La fonction retourne le dictionnaire suivant :
     {
         "check": check,
+        "nature": nature,
         "sens": sens,
-        "nb_cases": nb_cases
+        "nb_cases": nb_cases,
+        "erreur": erreur
     }
     """
 
     check = False
+    nature = ""
     sens = ""
     nb_cases = 0
     erreur = ""
-    erreur_help = "(Tapez help pour afficher l'aide, ou lab pour afficher le labyrinthe)\n"
+    erreur_help = "(Tapez help pour afficher l'aide, ou lab pour " \
+        "afficher le labyrinthe)\n"
 
     if len(input_user) == 0:
-        erreur = "Erreur : merci d'entrer une direction :)\n" + erreur_help
-
+        erreur = "Erreur : merci d'entrer une commande " \
+            "valide :)\n" + erreur_help
     else:
-        sens = input_user[0]
-        if sens not in ["N", "E", "S", "O", "n", "e", "s", "o"]:
-            erreur = "Saisie de la direction incorrecte (N, E, S ou O obligatoire).\n" + erreur_help
-        else:
+        nature = input_user[0].upper()
+        # Commande "M" (murer une porte)
+        if nature == "M":
+            # Il faut une seule lettre de direction derrière une commande
+            # de type "M"
+            if len(input_user) != 2:
+                erreur = "Erreur : vous devez préciser une " \
+                    "direction pour murer une porte !\n" + erreur_help
+            else:
+                if input_user[1].upper() not in ["N", "E", "S", "O"]:
+                    erreur = "Erreur : saisie de la direction incorrecte " \
+                        "(N, E, S ou O obligatoire) !\n" + erreur_help
+                else:
+                    sens = input_user[1].upper()
+                    check = True
+        # Commande "P" (percer un mur)
+        if nature == "P":
+            # Il faut une seule lettre de direction derrière une commande
+            # de type "P"
+            if len(input_user) != 2:
+                erreur = "Erreur : vous devez préciser une " \
+                    "direction pour percer un mur !\n" + erreur_help
+            else:
+                if input_user[1].upper() not in ["N", "E", "S", "O"]:
+                    erreur = "Erreur : saisie de la direction incorrecte " \
+                        "(N, E, S ou O obligatoire) !\n" + erreur_help
+                else:
+                    sens = input_user[1].upper()
+                    check = True
+        # Commande "NESO" (déplacement)
+        elif nature in ["N", "E", "S", "O"]:
             # S'il n'y aucun caractère derrière la direction, le joueur
             # souhaite se déplacer d'une seule case
             if len(input_user) == 1:
+                sens = nature
                 nb_cases = 1
                 check = True
             # Sinon on regarde si ce ou ces caractères sont bien des entiers
@@ -177,9 +210,19 @@ def check_user_input(input_user):
                 # On vérifie que l'utilisateur n'a pas entré un nombre
                 # inférieur ou égal à 0
                 if nb_cases <= 0:
-                    erreur = "Erreur : vous devez entrer un nombre entier " \
-                        "strictement positif derrière votre direction !\n" + erreur_help
+                    erreur = "Erreur : vous devez entrer un " \
+                        "nombre entier strictement positif derrière " \
+                        "votre direction !\n" + erreur_help
                 else:
+                    sens = nature
                     check = True
+        else:
+            erreur = "Erreur : saisie de la commande " \
+                "incorrecte.\n" + erreur_help
 
-    return {"check": check, "sens": sens, "nb_cases": nb_cases, "erreur": erreur}
+    return {
+        "check": check,
+        "nature": nature,
+        "sens": sens,
+        "nb_cases": nb_cases,
+        "erreur": erreur}

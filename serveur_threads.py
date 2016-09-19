@@ -47,17 +47,19 @@ class ThreadClient(Thread):
             # Si la partie n'a pas encore commencé
             if not global_variables_server.play:
                 # Un client entre la touche C
-                nb_joueurs = len(global_variables_server.saved_connections)
+                global_variables_server.nb_joueurs = len(global_variables_server.saved_connections)
+                print("Nombre de joueurs : ", global_variables_server.nb_joueurs)
                 if msgClient.upper() == "C":
                     self.active = True
                     # Envoi de la carte à celui qui commence
-                    if nb_joueurs > 1:
+                    if global_variables_server.nb_joueurs > 1:
                         self.send_message_to_client("A vous l'honneur !")
                     else:
                         self.send_message_to_client("Vous jouez en solo !")
+                    self.send_message_to_client("\n\n" + global_variables_server.carte.string + "\n\n")
                     self.send_broadcast_message_to_other_clients("STOP")
                     self.send_message_to_client("PLAY")
-                    if nb_joueurs > 1:
+                    if global_variables_server.nb_joueurs > 1:
                         broadcast_message = "C'est à {} de commencer".format(identifiant)
                         self.send_broadcast_message_to_other_clients(broadcast_message)
                     # self.send_message_to_client("\n" + global_variables_server.carte.string + "\n")
@@ -82,43 +84,85 @@ class ThreadClient(Thread):
             # Si la partie a commencé
             if global_variables_server.play:
                 if self.active:
-                    deplacement = check_user_input(msgClient)
                     if msgClient == "help":
                         print("L'utilisateur demande de l'aide")
                         help_content = global_variables_server.labyrinth.get_help()
                         self.send_message_to_client(help_content)
-                    elif msgClient == "lab":
-                        print("L'utilisateur demande l'affichage de la carte")
+                    if msgClient == "lab":
+                        # print("L'utilisateur demande l'affichage de la carte")
                         self.send_message_to_client("\n" + global_variables_server.carte.string + "\n")
-                    elif deplacement["check"]:
-                        print("Commande acceptée")
-                        # TO DO...
-                        self.send_message_to_client("\n\n" + global_variables_server.carte.string + "\n")
-                        # TO DO...
 
-                        # Le thread actif passe au statut inactif
-                        self.active = False
-                        self.send_message_to_client("STOP")
-                        global_variables_server.i += 1
-                        # Si on arrive au bout de la liste des joueurs, on
-                        # réinitisalise l'indice de parcours
-                        if global_variables_server.i == len(global_variables_server.liste_joueurs):
-                            global_variables_server.i = 0
-                        print("Prochain joueur : ", global_variables_server.liste_joueurs[global_variables_server.i])
-                        next_player = global_variables_server.liste_joueurs[global_variables_server.i]
-                        if nb_joueurs > 1:
-                            self.send_message_to_client("\nDéplacement OK, c'est au tour de {} .".format(next_player))
+                    commande = check_user_input(msgClient)
+                    command_checked = commande["check"]
+                    # print("Commande : ", commande)
+
+                    if command_checked:
+                        command_validated = False
+                        print("Commande correcte")
+                        if commande["nature"] in ["N", "E", "S", "O"]:
+                            # print("L'utilisateur demande à se déplacer")
+                            move_result = global_variables_server.labyrinth.robot_move(
+                                global_variables_server.robot,
+                                commande["sens"],
+                                commande["nb_cases"]
+                            )
+                            if move_result["info"]:
+                                self.send_message_to_client(move_result["info"])
+                            print("retour du déplacement : ", move_result)
+                            command_validated = move_result["check"]
+                        elif commande["nature"] == "M":
+                            # print("L'utilisateur veut murer une porte")
+                            wall_action_result = global_variables_server.labyrinth.robot_do(
+                                global_variables_server.robot,
+                                commande["sens"],
+                                "wall_up"
+                            )
+                            print("retour du murage : ", wall_action_result)
+                            # self.send_message_to_client(global_variables_server.carte.char_matrice)
+                            if wall_action_result["info"]:
+                                self.send_message_to_client(wall_action_result["info"])
+                            command_validated = wall_action_result["check"]
                         else:
-                            self.send_message_to_client("\nDéplacement OK")
-                        # Le prochain thread (actif) passe au statut actif
-                        global_variables_server.saved_threads[next_player].active = True
-                        self.send_message_to_other_client("PLAY", next_player)
-                        if nb_joueurs > 1:
-                            self.send_message_to_other_client("\nC'est à vous !\n\n" + global_variables_server.carte.string + "\n\nEntrez votre commande :\n> ", next_player)
+                            # print("L'utilisateur veut percer un mur")
+                            wall_action_result = global_variables_server.labyrinth.robot_do(
+                                global_variables_server.robot,
+                                commande["sens"],
+                                "wall_down"
+                            )
+                            print("retour du murage : ", wall_action_result)
+                            # self.send_message_to_client(global_variables_server.carte.char_matrice)
+                            if wall_action_result["info"]:
+                                self.send_message_to_client(wall_action_result["info"])
+                            command_validated = wall_action_result["check"]
+
+                        if command_validated:
+                            print("Commande validée")
+                            print("Nombre de joueurs : ", global_variables_server.nb_joueurs)
+                            global_variables_server.carte.update_carte_string(global_variables_server.robot)
+                            if global_variables_server.nb_joueurs > 1:
+                                # Le thread actif passe au statut inactif
+                                self.active = False
+                                self.send_message_to_client("STOP")
+                                global_variables_server.i += 1
+                                # Si on arrive au bout de la liste des joueurs,
+                                # on réinitisalise l'indice de parcours
+                                if global_variables_server.i == len(global_variables_server.liste_joueurs):
+                                    global_variables_server.i = 0
+                                print("Prochain joueur : ", global_variables_server.liste_joueurs[global_variables_server.i])
+                                next_player = global_variables_server.liste_joueurs[global_variables_server.i]
+                                self.send_message_to_client("\n\n" + global_variables_server.carte.string + "\n\nC'est au tour de {} de jouer.".format(next_player))
+                                # Le prochain thread passe au statut actif
+                                global_variables_server.saved_threads[next_player].active = True
+                                self.send_message_to_other_client("PLAY", next_player)
+                                self.send_message_to_other_client("\nC'est à vous !\n\n" + global_variables_server.carte.string + "\n\nEntrez votre commande :\n> ", next_player)
+                            else:
+                                self.send_message_to_client("\n\n" + global_variables_server.carte.string + "\n\nEntrez votre commande :\n> ")
+                        else:
+                            print("Commande non validée")
+                            # TO DO...
                     else:
-                        message = "{}> Commande incorrecte".format(identifiant)
-                        print(message)
-                        erreur = deplacement["erreur"]
+                        print("Commande incorrecte")
+                        erreur = commande["erreur"]
                         self.send_message_to_client(erreur)
 
                 else:

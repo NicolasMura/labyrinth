@@ -1,9 +1,9 @@
-*****************
-Jeu du labyrinthe
-*****************
+****************************************
+A server / multi-clients Labyrinthe game
+****************************************
 
-Lancement du jeu en mode console
-================================
+Launch the game in a shell
+==========================
 
 .. code-block:: shell
 

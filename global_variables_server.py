@@ -11,9 +11,11 @@ Version : 1.0
 
 global carte
 global labyrinth
+global robot
 global saved_connections
 global saved_threads
 global liste_joueurs
+global nb_joueurs
 global i  # Indice de boucle de parcours des joueurs
 global play
 global accept_new_client

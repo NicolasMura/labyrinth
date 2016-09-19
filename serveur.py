@@ -58,7 +58,8 @@ carte = Carte(
     map_selected["number"],
     map_selected["filename"],
     map_selected["name_to_print"],
-    string_map, string_map)
+    string_map
+)
 
 # Récupération du labyrinthe et du robot
 labyrinth = carte.labyrinth
@@ -68,6 +69,7 @@ robot = carte.labyrinth.robot
 print("\n" + carte.string + "\n")
 global_variables_server.carte = carte
 global_variables_server.labyrinth = labyrinth
+global_variables_server.robot = robot
 
 """ Initialisation du serveur - Mise en place du socket """
 

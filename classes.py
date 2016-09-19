@@ -10,6 +10,7 @@ Date    : 08/09/2016
 Version : 2.0
 """
 
+import global_variables_server
 import os
 import pickle
 from robot import Robot
@@ -21,40 +22,32 @@ class Carte:
     Objet de transition entre un fichier et un labyrinthe.
     """
 
-    def __init__(self, number, filename, name_to_print, string, string_initiale):
+    def __init__(self, number, filename, name_to_print, string_initiale):
         """
         Initialisation d'une carte.
 
-        Soit on reprend une partie sauvegardée, la carte et son labyrinthe
-        associé sont créés avec :
-        - string_saved issue du fichier cartes/sauvegardes/<carte_filename>.txt
-        - string_initiale issue du fichier <carte_filename>.txt (fichier original)
-
-        Soit on reprend une partie du début, et dans ce cas
-        string_saved = string_initiale
+        La carte et son labyrinthe associé sont créés avec :
+        - string_initiale issue du fichier <carte_filename>.txt
         """
 
         self.number = number
         self.filename = filename
         self.name_to_print = name_to_print
-        self.string = string
+        self.string = string_initiale
         self.string_initiale = string_initiale
         self.char_matrice = []
         self.char_matrice_initiale = []
-        self.labyrinth = self.create_labyrinth_from_string(string, string_initiale)
+        self.labyrinth = self.create_labyrinth_from_string(string_initiale)
         self.largeur = self.labyrinth.largeur
         self.hauteur = self.labyrinth.hauteur
 
     def __repr__(self):
         return "<Carte {} - {}>".format(self.number, self.name_to_print)
 
-    def create_labyrinth_from_string(self, string, string_initiale):
+    def create_labyrinth_from_string(self, string_initiale):
         """
-        Création de 2 matrices : matrices char_matrice et
-        char_matrice_initiale.
-
-        * char_matrice_initiale contiendra tous les caractères de la carte
-        initiale, par ex. :
+        Création de la matrice char_matrice_initiale qui contiendra tous les
+        caractères de la carte initiale, par ex. :
         char_matrice_initiale = [
             ['O', 'X', 'O', ' ', 'U'],
             ['O', ' ', 'O', ' ', 'O'],
@@ -62,35 +55,23 @@ class Carte:
             ['O', 'O', 'O', 'O', 'O']
         ]
 
-        * char_matrice contiendra tous les caractères de la carte
-        sauvegardée (si on reprend un partie sauvegardée), par ex. :
-        char_matrice_initiale = [
-            ['O', ' ', 'O', ' ', 'U'],
-            ['O', ' ', 'O', ' ', 'O'],
-            ['O', ' ', '.', 'X', 'O'],
-            ['O', 'O', 'O', 'O', 'O']
-        ]
-
-        Si on reprend la partie depuis le début, les deux matrices
-        sont identiques car dans ce cas string = string_initiale.
-
         On génère ensuite le labyrinthe associé.
         """
 
-        char_line = []           # Liste contenant tous les caractères d'une ligne
+        char_line = []           # Liste de tous les caractères d'une ligne
         char_line_initiale = []  # idem pour la carte initiale
         obstacles = []           # Liste des obstacles
 
         ligne = 0
         colonne = 0
         robot = None
-        # Parcours des chaînes string et string_initiale
-        for i in range(0, len(string)):
+        # Parcours de la chaîne string_initiale
+        for i in range(0, len(string_initiale)):
 
             # Si le caractère est un retour à la ligne on ajoute la ligne
             # créée aux matrices char_matrice / char_matrice_initiale et on
             # réinitialise char_line /char_line_initiale pour la ligne suivante
-            if string[i] == "\n":
+            if string_initiale[i] == "\n":
                 self.char_matrice.append(char_line)
                 self.char_matrice_initiale.append(char_line_initiale)
                 char_line, char_line_initiale = [], []
@@ -98,24 +79,25 @@ class Carte:
                 ligne += 1
             # Sinon, on l'ajoute aux listes char_line / char_line_initiale
             else:
-                char_line.append(string[i])
+                char_line.append(string_initiale[i])
                 char_line_initiale.append(string_initiale[i])
-                if string[i] == Robot.symbole:
+                if string_initiale[i] == Robot.symbole:
                     if robot is not None:
                         raise ValueError("Erreur lors de la génération du labyrinthe : il ne peut y avoir qu'un seul robot.")
                     robot = Robot(colonne, ligne)  # Création du robot
-                elif string[i] == Mur.symbole:
-                    obstacles.append(Mur(colonne, ligne, Mur.name))  # Création d'un obstacle
-                elif string[i] == Porte.symbole:
-                    obstacles.append(Porte(colonne, ligne, Porte.name))  # Création d'un obstacle
-                elif string[i] == Sortie.symbole:
-                    obstacles.append(Sortie(colonne, ligne, Sortie.name))  # Création d'un obstacle
-                elif string[i] == " ":
+                # Création des obstacles:
+                elif string_initiale[i] == Mur.symbole:
+                    obstacles.append(Mur(colonne, ligne, Mur.name))
+                elif string_initiale[i] == Porte.symbole:
+                    obstacles.append(Porte(colonne, ligne, Porte.name))
+                elif string_initiale[i] == Sortie.symbole:
+                    obstacles.append(Sortie(colonne, ligne, Sortie.name))
+                elif string_initiale[i] == " ":
                     pass
                 else:
-                    raise ValueError("Erreur lors de la génération du labyrinthe : symbole '{}' inconnu.".format(string[i]))
+                    raise ValueError("Erreur lors de la génération du labyrinthe : symbole '{}' inconnu.".format(string_initiale[i]))
                 # Si c'est le dernier caractère
-                if i == len(string)-1:
+                if i == len(string_initiale)-1:
                     self.char_matrice.append(char_line)
                     self.char_matrice_initiale.append(char_line_initiale)
                 colonne += 1
@@ -156,23 +138,6 @@ class Carte:
                 self.string += "\n"
             nb_lignes += 1
 
-    def save(self):
-        """
-        Fonction permettant d'enregistrer la partie en cours.
-        """
-        if not os.path.isdir("cartes/sauvegardes/"):
-            os.makedirs("cartes/sauvegardes/")
-        with open("cartes/sauvegardes/" + self.filename, "wb") as data:
-                mypickler = pickle.Pickler(data)
-                mypickler.dump(self.string)
-
-    def destroy(self):
-        """
-        Fonction permettant d'effacer la partie en cours.
-        """
-        if os.path.isfile("cartes/sauvegardes/" + self.filename):
-            os.remove("cartes/sauvegardes/" + self.filename)
-
 
 class Labyrinthe:
     """
@@ -196,15 +161,21 @@ class Labyrinthe:
     def robot_move(self, robot, sens, nb_cases):
         """
         Fonction permettant de déplacer le robot dans le labyrinthe,
-        et renvoyant un bouléen :
+        et renvoyant un dictionnaire :
 
-        - fin_partie : True si on rencontre une obstacle de type Sortie,
-        False sinon
+        {
+            "check" : check,
+            "info" : info,
+            "fin_partie" : fin_partie # True si on rencontre une obstacle de type Sortie,
+        }
         """
+
+        check = False
+        info = ""
+        fin_partie = False
 
         robot_move = False
         deplacement_interdit = False
-        fin_partie = False
 
         # On sauvegarde la position du robot
         robot.last_pos_x = robot.pos_x
@@ -221,7 +192,8 @@ class Labyrinthe:
 
             # On vérifie qu'on ne sort pas des limites du labyrinthe
             if robot.pos_x < 0 or robot.pos_x >= self.largeur or robot.pos_y < 0 or robot.pos_y >= self.hauteur:
-                print("Vous ne pouvez pas sortir des limites du labyrinthe !\n")
+                info = "Vous ne pouvez pas sortir des limites " \
+                    "du labyrinthe !\n"
                 robot.pos_x = robot_pos_x_save
                 robot.pos_y = robot_pos_y_save
                 deplacement_interdit = True
@@ -229,7 +201,8 @@ class Labyrinthe:
             else:
                 for obstacle in self.obstacles:
                     if obstacle.pos_x == robot.pos_x and obstacle.pos_y == robot.pos_y:
-                        # Si l'obstacle est infranchissable, on arrête le déplacement
+                        # Si l'obstacle est infranchissable,
+                        # on arrête le déplacement
                         if not obstacle.can_be_crossed:
                             robot.pos_x = robot_pos_x_save
                             robot.pos_y = robot_pos_y_save
@@ -239,9 +212,11 @@ class Labyrinthe:
                             fin_partie = True
                         # Autres retours utilisateurs
                         if type(obstacle) == Mur:
-                            print("Vous ne pouvez pas franchir un obstacle {} !\n".format(Mur.name))
+                            info = "Vous ne pouvez pas franchir un " \
+                                "obstacle {} !\n".format(Mur.name)
                         if type(obstacle) == Porte:
-                            print("Vous franchissez un obstacle {}...\n".format(Porte.name))
+                            info = "Vous franchissez un " \
+                                "obstacle {}...\n".format(Porte.name)
 
             # Pour un déplacement interdit, on stoppe le déplacement
             # et on sort de la boucle while
@@ -249,18 +224,126 @@ class Labyrinthe:
                 break
             else:
                 i += 1
+                # S'il y a eu au moins 1 déplacement,
+                # le déplacement global est valide
+                if i >= 1:
+                    check = True
 
-        return fin_partie
+        return {
+            "check": check,
+            "info": info,
+            "fin_partie": fin_partie
+        }
+
+    def robot_do(self, robot, sens, action):
+        """
+        Fonction permettant de murer une porte dans le labyrinthe,
+        et renvoyant un dictionnaire :
+
+        {
+            "check" : check,
+            "info" : info,
+        }
+        """
+
+        check = False
+        info = ""
+
+        cible_x = robot.pos_x
+        cible_y = robot.pos_y
+
+        if sens == "N":
+            cible_y = robot.pos_y - 1
+        if sens == "E":
+            cible_x = robot.pos_x + 1
+        if sens == "S":
+            cible_y = robot.pos_y + 1
+        if sens == "O":
+            cible_x = robot.pos_x - 1
+
+        # On vérifie qu'on ne sort pas des limites du labyrinthe...
+        if cible_x < 0 or cible_x >= self.largeur or cible_y < 0 or cible_y >= self.hauteur:
+            if action == "wall_up":
+                info = "Vous ne pouvez pas murer au-delà des limites du " \
+                    "labyrinthe !"
+            if action == "wall_down":
+                info = "Vous ne pouvez pas percer au-delà des limites du " \
+                    "labyrinthe !"
+        # ... et qu'il y a bien un obstacle
+        elif global_variables_server.carte.char_matrice[cible_y][cible_x] == " ":
+            if action == "wall_up":
+                info = "Il n'y a strictement rien à murer ici !"
+            if action == "wall_down":
+                info = "Il n'y a strictement rien à percer ici !"
+        # Sinon, on vérifie le type d'obstacle que l'utilisateur
+        # essaie de murer
+        else:
+            for indice, obstacle in enumerate(self.obstacles):
+                if obstacle.pos_x == cible_x and obstacle.pos_y == cible_y:
+                    if action == "wall_up":
+                        # Si l'obstacle est une porte
+                        if type(obstacle) == Porte:
+                            info = "Vous murez une porte !"
+                            check = True
+                            # On sauvegarde l'indice de cette porte
+                            indice_porte = indice
+                        else:
+                            if type(obstacle) == Mur:
+                                info = "Vous ne pouvez pas murer un obstacle " \
+                                    "de type {} !".format(Mur.name)
+                            elif type(obstacle) == Sortie:
+                                info = "Vous ne pouvez pas murer un obstacle " \
+                                    "de type {} !".format(Sortie.name)
+                            else:
+                                info = "??? Cas pas testé ???"
+                    if action == "wall_down":
+                        # Si l'obstacle est un mur
+                        if type(obstacle) == Mur:
+                            info = "Vous percez un mur !"
+                            check = True
+                            # On sauvegarde l'indice de ce mur
+                            indice_mur = indice
+                        else:
+                            if type(obstacle) == Porte:
+                                info = "Vous ne pouvez pas percer un obstacle " \
+                                    "de type {} !".format(Porte.name)
+                            elif type(obstacle) == Sortie:
+                                info = "Vous ne pouvez pas percer un obstacle " \
+                                    "de type {} !".format(Sortie.name)
+                            else:
+                                info = "??? Cas pas testé ???"
+
+        if check:
+            if action == "wall_up":
+                # Mise à jour de la carte
+                global_variables_server.carte.char_matrice[cible_y][cible_x] = Mur.symbole
+                # Mise à jour de la liste des obstacles
+                del self.obstacles[indice_porte]
+                self.obstacles.append(Mur(cible_x, cible_y, Mur.name))
+            if action == "wall_down":
+                # Mise à jour de la carte
+                global_variables_server.carte.char_matrice[cible_y][cible_x] = Porte.symbole
+                # Mise à jour de la liste des obstacles
+                del self.obstacles[indice_mur]
+                self.obstacles.append(Porte(cible_x, cible_y, Porte.name))
+            global_variables_server.carte.update_carte_string(robot)
+        return {
+            "check": check,
+            "info": info
+        }
 
     def get_help(self):
         help_content = "\nRappel des règles du jeu :\n" \
-        "  - Entrez N pour aller en haut\n" \
-        "  - Entrez E pour aller à droite\n" \
-        "  - Entrez S pour aller en bas\n" \
-        "  - Entrez O pour aller à gauche\n" \
-        "  - Chacune des directions ci-dessus suivies d'un nombre permet d'avancer de \n" \
-            "    plusieurs cases (par exemple E3 pour avancer de trois cases vers la droite)\n" \
-        "  - Entrez Q pour quitter la partie\n" \
-        "  - Entrez help pour obtenir de l'aide.\n" \
-        "  - Entrez lab pour afficher le labyrinthe.\n"
+            "  - Entrez N pour aller en haut\n" \
+            "  - Entrez E pour aller à droite\n" \
+            "  - Entrez S pour aller en bas\n" \
+            "  - Entrez O pour aller à gauche\n" \
+            "  - Chacune des directions ci-dessus suivies d'un nombre " \
+            "permet d'avancer de \n" \
+            "    plusieurs cases (par exemple E3 pour avancer " \
+            "de trois cases vers la droite)\n" \
+            "  - Entrez M + une direction pour murer une porte\n" \
+            "  - Entrez Q pour quitter la partie\n" \
+            "  - Entrez help pour obtenir de l'aide.\n" \
+            "  - Entrez lab pour afficher le labyrinthe.\n"
         return help_content
