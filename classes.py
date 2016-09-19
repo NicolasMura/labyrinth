@@ -253,12 +253,14 @@ class Labyrinthe:
         return fin_partie
 
     def get_help(self):
-        print("\nRappel des règles du jeu :")
-        print("  - Entrez N pour aller en haut")
-        print("  - Entrez E pour aller à droite")
-        print("  - Entrez S pour aller en bas")
-        print("  - Entrez O pour aller à gauche")
-        print("  - Chacune des directions ci-dessus suivies d'un nombre permet d'avancer de \n" \
-            "    plusieurs cases (par exemple E3 pour avancer de trois cases vers la droite)")
-        print("  - Entrez Q pour quitter la partie")
-        print("  - Entrez help pour obtenir de l'aide.\n")
+        help_content = "\nRappel des règles du jeu :\n" \
+        "  - Entrez N pour aller en haut\n" \
+        "  - Entrez E pour aller à droite\n" \
+        "  - Entrez S pour aller en bas\n" \
+        "  - Entrez O pour aller à gauche\n" \
+        "  - Chacune des directions ci-dessus suivies d'un nombre permet d'avancer de \n" \
+            "    plusieurs cases (par exemple E3 pour avancer de trois cases vers la droite)\n" \
+        "  - Entrez Q pour quitter la partie\n" \
+        "  - Entrez help pour obtenir de l'aide.\n" \
+        "  - Entrez lab pour afficher le labyrinthe.\n"
+        return help_content

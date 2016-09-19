@@ -1,52 +1,71 @@
 # -*- coding: utf-8 -*-
 
 """
-Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 3
+Jeu du Labyrinthe / Exercice tutoriel Python OC, partie 4
 Mainfile côté client - Pour lancer le client, exécutez :
-> python3 client.py sous OS X
-> py -3 client.py sous Windows
+> python3 client.py (Mac OS X)
+> py -3 client.py (Windows)
+
+Note : le client doit être exécuté sur une (ou plusieurs) machines connectée(s)
+au même réseau que le serveur - voir module setup.py.
 
 Auteur  : Nicolas MURA
 Date    : 08/09/2016
-Version : 2.0
+Version : 1.0
 """
 
-import setup
+from os import system as os_system, name as os_name
 import socket
-import os
+from sys import exit
+
 import setup
+import global_variables_client
+from client_threads import ThreadReception, ThreadEmission
 
-if os.name == "nt":  # Cas Windows
-    os.system('cls')
+if os_name == "nt":  # Cas Windows
+    os_system('cls')
 else:
-    os.system("clear")
+    os_system("clear")
 
 
-hote = setup.CLIENT_HOST
-port = setup.PORT
+HOST = setup.HOST
+PORT = setup.PORT
 
 print("Tentative de connexion avec le serveur du jeu Labyrinthe en cours...\n")
-connexion_avec_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connection_with_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connexionOK = False
+# print(PORT)
 try:
-    connexion_avec_serveur.connect((hote, port))
-except:
-    raise ConnectionRefusedError("Vous devez d'abord lancer le serveur !")
+    connection_with_server.connect((HOST, PORT))
+    connexionOK = True
+except socket.error:
+    print("La connexion a échoué.")
+if not connexionOK:
+    connection_with_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    print("Nouvelle tentative en cours...")
+    PORT += 1
+    # print(PORT)
+    try:
+        connection_with_server.connect((HOST, PORT))
+    except socket.error:
+        print("La connexion a échoué.")
+        exit()
+print("Connexion établie avec le serveur du jeu Labyrinthe !\n")
 
-print("Connexion établie avec le serveur du jeu Labyrinthe !")
+# A ce stade, le serveur doit normalement envoyer un message de bienvenue...
+msg_recu = connection_with_server.recv(1024).decode("utf-8")
+if msg_recu == "FULL":
+    print("Désolé, la partie a déjà commencé...")
+    print("Veuillez fermer les connexions clientes et redémarrer le serveur.")
+    exit()
+print(msg_recu)
 
-# A ce stade, le serveur doit normalement envoyer un message de bienvenue
-msg_recu = connexion_avec_serveur.recv(1024)
-print(msg_recu.decode())
-
-msg_a_envoyer = b""
-while msg_a_envoyer != b"fin":
-    msg_a_envoyer = input("> ")
-    # Peut planter si vous tapez des caractères spéciaux
-    msg_a_envoyer = msg_a_envoyer.encode()
-    # On envoie le message
-    connexion_avec_serveur.send(msg_a_envoyer)
-    msg_recu = connexion_avec_serveur.recv(1024)
-    print(msg_recu.decode())  # Là encore, peut planter s'il y a des accents
-
-print("Fermeture de la connexion")
-connexion_avec_serveur.close()
+# # Dialogue avec le serveur : on instancie deux threads enfants pour gérer
+# # indépendamment l'émission et la réception des messages
+global_variables_client.th_E = ThreadEmission(connection_with_server)
+th_R = ThreadReception(connection_with_server)
+global_variables_client.th_E.start()
+th_R.start()
+# global_variables_client.th_E.join()
+# global_variables_client.th_R.join()
+# exit()

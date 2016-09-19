@@ -17,7 +17,7 @@ from classes import *
 
 
 if os.name == "nt":  # Cas Windows
-    os.system('cls')
+    os.system("cls")
 else:
     os.system("clear")
 

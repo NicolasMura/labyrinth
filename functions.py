@@ -119,33 +119,16 @@ def chose_map(maps):
     return map_selected
 
 
-def get_string_map(map_selected, reprendre_partie):
+def get_string_map(map_selected):
     """
-    Fonction qui retourne 2 chaînes de caractères correspondant
+    Fonction qui retourne la chaîne de caractères correspondant
     à une carte en récupérant le contenu d'un fichier.
-    A la demande de l'utilisateur, on récupère :
-
-    - Soit une partie sauvegardée :
-      -> string_map_initiale = contenu du fichier cartes/<carte_filename>.txt
-      -> string_map_saved    = contenu du fichier cartes/sauvegardes/<carte_filename>_save
-
-    - Soit une partie à jouer depuis le début
-      -> string_map_initiale = contenu du fichier cartes/<carte_filename>.txt
-      -> string_map_saved    = string_map_initiale
     """
 
-    if reprendre_partie is True:
-        with open("cartes/" + map_selected["filename"], "r") as fichier:
-            string_map_initiale = fichier.read()
-        with open("cartes/sauvegardes/" + map_selected["filename"], "rb") as fichier:
-            mon_depickler = pickle.Unpickler(fichier)
-            string_map_saved = mon_depickler.load()
-    else:
-        with open("cartes/" + map_selected["filename"], "r") as fichier:
-            string_map_initiale = fichier.read()
-        string_map_saved = string_map_initiale
+    with open("cartes/" + map_selected["filename"], "r") as fichier:
+        string_map = fichier.read()
 
-    return string_map_saved, string_map_initiale
+    return string_map
 
 
 def check_user_input(input_user):
@@ -165,16 +148,16 @@ def check_user_input(input_user):
     check = False
     sens = ""
     nb_cases = 0
+    erreur = ""
+    erreur_help = "(Tapez help pour afficher l'aide, ou lab pour afficher le labyrinthe)\n"
 
     if len(input_user) == 0:
-        print("Erreur : merci d'entrer une direction :)\n" \
-            "(Tapez help pour afficher l'aide)\n")
+        erreur = "Erreur : merci d'entrer une direction :)\n" + erreur_help
 
     else:
         sens = input_user[0]
         if sens not in ["N", "E", "S", "O", "n", "e", "s", "o"]:
-            print("Saisie de la direction incorrecte (N, E, S ou O obligatoire).\n" \
-                "(Tapez help pour afficher l'aide)\n")
+            erreur = "Saisie de la direction incorrecte (N, E, S ou O obligatoire).\n" + erreur_help
         else:
             # S'il n'y aucun caractère derrière la direction, le joueur
             # souhaite se déplacer d'une seule case
@@ -187,18 +170,16 @@ def check_user_input(input_user):
                 try:
                     nb_cases = int(nb_cases)
                 except ValueError:
-                    print("Erreur : vous devez entrer un nombre " \
-                        "entier derrière votre direction !\n" \
-                        "(Tapez help pour afficher l'aide)\n")
+                    erreur = "Erreur : vous devez entrer un nombre " \
+                        "entier derrière votre direction !\n" + erreur_help
 
             if type(nb_cases) is int:
                 # On vérifie que l'utilisateur n'a pas entré un nombre
                 # inférieur ou égal à 0
                 if nb_cases <= 0:
-                    print("Erreur : vous devez entrer un nombre entier " \
-                        "strictement positif derrière votre direction !\n" \
-                        "(Tapez help pour afficher l'aide)\n")
+                    erreur = "Erreur : vous devez entrer un nombre entier " \
+                        "strictement positif derrière votre direction !\n" + erreur_help
                 else:
                     check = True
 
-    return {"check": check, "sens": sens, "nb_cases": nb_cases}
+    return {"check": check, "sens": sens, "nb_cases": nb_cases, "erreur": erreur}
